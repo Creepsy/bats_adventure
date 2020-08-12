@@ -2,7 +2,10 @@
 #include <SDL2/SDL_image.h>
 #include <iostream>
 
+#include "game.h"
+
 int main() {
+    game ga{};
     SDL_Window* window = nullptr;
     if(SDL_Init(SDL_INIT_VIDEO) < 0) return 1;
 
