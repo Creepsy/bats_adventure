@@ -11,7 +11,7 @@ class game {
     private:
         int current_height = 0;
         int current_change = 0;
-        int max_height = 6;
+        int max_height = 7;
         int max_change = 2;
         int max_change_time = 3;
         int next_change = 0;

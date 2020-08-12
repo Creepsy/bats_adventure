@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-game::game(const size_t width, const size_t height, const std::string& title) : window_width(width), window_height(height), title(title), running(false), game_speed(0.5) {
+game::game(const size_t width, const size_t height, const std::string& title) : window_width(width), window_height(height), title(title), running(false), game_speed(0.05) {
 }
 
 bool game::init() {
@@ -47,7 +47,7 @@ void game::run() {
         while(SDL_PollEvent(&event)) {
             this->handle_events(event);
         }
-        SDL_Delay(100);
+        SDL_Delay(10);
     }
 }
 
@@ -71,13 +71,13 @@ void game::handle_events(SDL_Event& event) {
 
 void game::generate_row() {
     if(this->next_change == 0) {
-        this->next_change = rand_int(0, this ->max_change_time);
+        this->next_change = rand_int(1, this ->max_change_time);
 
         this->current_change = 0;
 
         do {
             this->current_change = rand_int(-this->max_change, this->max_change);
-        } while(this->current_change == 0);
+        } while(this->current_change == 0 || this->current_height + this->current_change < 0 || this->current_height + this->current_change > this->max_height);
     } else {
         this->next_change--;
         this->current_height += this->current_change;
