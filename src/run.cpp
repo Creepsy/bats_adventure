@@ -1,15 +1,9 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <iostream>
 
 #include "game.h"
 
 int main() {
-    game ga{};
-    SDL_Window* window = nullptr;
-    if(SDL_Init(SDL_INIT_VIDEO) < 0) return 1;
-
-    window = SDL_CreateWindow("Bat's Adventure", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 512, SDL_WINDOW_SHOWN);
+   /* SDL_Window* window = nullptr;
 
     if(!window) return 1;
 
@@ -59,7 +53,12 @@ int main() {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyTexture(tex);
     SDL_DestroyWindow(window);
-    SDL_Quit();
+    SDL_Quit();*/
+
+    game g{1024, 512, "Bat's Adventure"};
+    if(!g.init()) return 1;
+
+    g.run();
 
     return 0;
 }
