@@ -9,19 +9,32 @@
 
 class game {
     private:
-        const size_t width, height;
+        int current_height = 0;
+        int current_change = 0;
+        int max_height = 6;
+        int max_change = 2;
+        int max_change_time = 3;
+        int next_change = 0;
+
+        float game_speed;
+
+        const size_t window_width, window_height;
         const std::string title;
 
         SDL_Window* window = nullptr;
         SDL_Renderer* renderer = nullptr;
         bool running;
 
-        SDL_Texture* test = nullptr;
+        std::vector<SDL_Texture*> textures;
 
-        std::vector<std::vector<std::pair<int, int>>> map;
+        std::vector<std::vector<tile>> map;
 
         void handle_events(SDL_Event& event);
         void init_grid();
+        void generate_row();
+        int get_texture_id(int x, int y);
+        void load_textures();
+        bool is_occupied(int x, int y);
     public:
         game(const size_t width, const size_t height, const std::string& title);
         bool init();
