@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "texture_loader.h"
+#include "utils.h"
 
 class game {
     private:

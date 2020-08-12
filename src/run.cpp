@@ -55,7 +55,7 @@ int main() {
     SDL_DestroyWindow(window);
     SDL_Quit();*/
 
-    game g{1024, 512, "Bat's Adventure"};
+    game g{1024, 512, "XXXXX"};
     if(!g.init()) return 1;
 
     g.run();
