@@ -13,5 +13,6 @@ public:
     void render(float scale, SDL_Renderer* renderer, const size_t screen_height);
     void add_force(float fx, float fy);
     void move(const size_t screen_width, const size_t screen_height);
+    bool does_collide(SDL_Rect tile, const size_t screen_height);
     ~player();
 };

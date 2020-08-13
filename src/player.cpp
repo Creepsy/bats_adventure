@@ -45,5 +45,10 @@ void player::move(const size_t screen_width, const size_t screen_height) {
     }
 }
 
+bool player::does_collide(SDL_Rect tile, const size_t screen_height) {   
+    int real_y = screen_height - this->y; 
+    return this->x + this->width / 4 < tile.x + tile.w && this->x + this->width / 4 * 3 > tile.x && real_y + this->height / 4 < tile.y + tile.h && real_y + this->height / 4 * 3 > tile.y;
+}
+
 player::~player() {
 }

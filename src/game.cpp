@@ -38,6 +38,10 @@ void game::run() {
             }
             for(tile& t : row) {
                 SDL_Rect pos = SDL_Rect{(int)(t.x * 32), (int)(this->window_height - t.y * 32 - 32), 33, 32};
+                if(this->bat.does_collide(pos, this->window_height)) {
+                    this->init_grid();
+                    this->bat = player{100, 100, this->textures[28], 4};
+                }
                 SDL_RenderCopy(this->renderer, this->textures[t.texture_id], nullptr, &pos);
                 t.x -= this->game_speed;
             }
@@ -109,6 +113,11 @@ void game::generate_row() {
 }
 
 void game::init_grid() {
+    this->map.clear();
+    this->current_change = 0;
+    this->current_height = 0;
+    this->next_change = 0;
+
     for(int w = 0; w < this->window_width / 32 + 2; w++){
         std::vector<tile> row{this->window_height / 32, tile{-1, -1, 0}};
         row.at(this->current_height) = tile{(float)w - 1, (float)this->current_height};
