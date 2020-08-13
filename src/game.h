@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "utils.h"
+#include "animatable.h"
 
 class game {
     private:
@@ -28,6 +29,8 @@ class game {
         std::vector<SDL_Texture*> textures;
 
         std::vector<std::vector<tile>> map;
+
+        animatable player;
 
         void handle_events(SDL_Event& event);
         void init_grid();

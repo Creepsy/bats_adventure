@@ -19,6 +19,8 @@ bool game::init() {
     this->load_textures();
     this->init_grid();
 
+    this->player = animatable{this->textures[28], 8, 32, 32, 32, 4};
+
     return true;
 }
 
@@ -40,6 +42,9 @@ void game::run() {
                 t.x -= this->game_speed;
             }
         }
+        SDL_Rect player_pos = SDL_Rect{512, 128, 64, 64};
+        this->player.update();
+        this->player.render(player_pos, this->renderer);
 
         SDL_RenderPresent(renderer);
 
@@ -188,6 +193,8 @@ void game::load_textures() {
 
     this->textures.push_back(load_texture_from_file("textures/tilemap/wall_connect_left.png", this->renderer));
     this->textures.push_back(load_texture_from_file("textures/tilemap/wall_connect_right.png", this->renderer));
+
+    this->textures.push_back(load_texture_from_file("textures/bat.png", this->renderer));
 }
 
 bool game::is_occupied(int x, int y) {
