@@ -1,6 +1,6 @@
 #include "player.h"
 
-player::player(int start_x, int start_y, SDL_Texture* texture_map, size_t timer) :
+player::player(float start_x, float start_y, SDL_Texture* texture_map, size_t timer) :
     x(start_x), y(start_y), animatable{texture_map, 8, 32, 32, 32, timer} {
 }
 
@@ -13,7 +13,36 @@ void player::render(float scale, SDL_Renderer* renderer, const size_t screen_hei
                                    (int)((screen_height - this->y) - this -> height * scale / 2),
                                    (int)(this->width * scale),
                                    (int)(this->height * scale)};
-    this->animatable::render(screen_pos, renderer);
+    this->animatable::render(screen_pos, renderer, -this->velocity_y * 10);
+}
+
+void player::add_force(float fx, float fy) {
+    this->velocity_x += fx;
+    this->velocity_y += fy;
+
+    if(this->velocity_y > 6) this->velocity_y = 6;
+}
+void player::move(const size_t screen_width, const size_t screen_height) {
+    this->x += this->velocity_x;
+    this->y += this->velocity_y;
+
+    if(this->x < 0) {
+        this->x = 0;
+        this->velocity_x = 0;
+    } 
+    if(this->y < 0) {
+        this->y = 0;
+        this->velocity_y = 0;
+    } 
+
+    if(this->x > screen_width) {
+        this->x = screen_width;
+        this->velocity_x = 0;
+    } 
+    if(this->y > screen_height) {
+        this->y = screen_height;
+        this->velocity_y = 0;
+    }
 }
 
 player::~player() {

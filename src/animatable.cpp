@@ -16,9 +16,10 @@ void animatable::update() {
         this->curr_time++;
     }
 }
-void animatable::render(SDL_Rect screen_pos, SDL_Renderer* renderer) {
+void animatable::render(SDL_Rect screen_pos, SDL_Renderer* renderer, double rotation) {
     SDL_Rect tex_pos = SDL_Rect{(int)(this->offset * this->curr_frame), 0, (int)this->width, (int)this->height};
-    SDL_RenderCopy(renderer, this->texture_map, &tex_pos, &screen_pos);
+    SDL_RenderCopyEx(renderer, this->texture_map, &tex_pos, &screen_pos, rotation, nullptr, SDL_FLIP_NONE);
+   // SDL_RenderCopy(renderer, this->texture_map, &tex_pos, &screen_pos);
 }
 
 animatable::~animatable() {

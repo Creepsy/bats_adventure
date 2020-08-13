@@ -42,6 +42,9 @@ void game::run() {
                 t.x -= this->game_speed;
             }
         }
+        
+        this->bat.add_force(0, -0.1);
+        this->bat.move(this->window_width, this->window_height);
         this->bat.update();
         this->bat.render(2, this->renderer, this->window_height);
 
@@ -66,6 +69,7 @@ void game::handle_events(SDL_Event& event) {
     switch(event.type) {
         case SDL_KEYDOWN:
             if(event.key.keysym.sym == SDLK_ESCAPE) this->running = false;
+            if(event.key.keysym.sym == SDLK_SPACE) this->bat.add_force(0, 8);
             break;
         case SDL_QUIT:
             this->running = false;

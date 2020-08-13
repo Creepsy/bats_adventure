@@ -17,7 +17,7 @@ class animatable {
         animatable(SDL_Texture* texture_map, size_t frames, size_t offset, size_t width, size_t height, size_t timer = 0);
         animatable();
         void update();
-        void render(SDL_Rect screen_pos, SDL_Renderer* renderer);
+        void render(SDL_Rect screen_pos, SDL_Renderer* renderer, double rotation);
         ~animatable();
 };
 
