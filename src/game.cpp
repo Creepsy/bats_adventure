@@ -19,7 +19,7 @@ bool game::init() {
     this->load_textures();
     this->init_grid();
 
-    this->player = animatable{this->textures[28], 8, 32, 32, 32, 4};
+    this->bat = player{100, 100, this->textures[28], 4};
 
     return true;
 }
@@ -42,9 +42,8 @@ void game::run() {
                 t.x -= this->game_speed;
             }
         }
-        SDL_Rect player_pos = SDL_Rect{512, 128, 64, 64};
-        this->player.update();
-        this->player.render(player_pos, this->renderer);
+        this->bat.update();
+        this->bat.render(2, this->renderer, this->window_height);
 
         SDL_RenderPresent(renderer);
 

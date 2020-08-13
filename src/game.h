@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "utils.h"
-#include "animatable.h"
+#include "player.h"
 
 class game {
     private:
@@ -30,7 +30,7 @@ class game {
 
         std::vector<std::vector<tile>> map;
 
-        animatable player;
+        player bat;
 
         void handle_events(SDL_Event& event);
         void init_grid();
