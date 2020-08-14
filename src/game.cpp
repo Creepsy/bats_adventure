@@ -20,6 +20,8 @@ bool game::init() {
     this->init_grid();
 
     this->bat = player{100, 100, this->textures[28], 4};
+    this->bar = blood_bar{0, 0, this->textures[30], this->textures[31]};
+    this->bar.set_percentage(0.5);
 
     return true;
 }
@@ -27,6 +29,8 @@ bool game::init() {
 void game::run() {
     while(this->running) {
         SDL_RenderClear(this->renderer);
+
+        SDL_RenderCopy(this->renderer, this->textures[29], nullptr, nullptr);
 
         for(int i = 0; i < this->map.size(); i++) {
             std::vector<tile>& row = this->map.at(i);
@@ -41,11 +45,14 @@ void game::run() {
                 if(this->bat.does_collide(pos, this->window_height)) {
                     this->init_grid();
                     this->bat = player{100, 100, this->textures[28], 4};
+                    this->bar.set_percentage(0.5);
                 }
                 SDL_RenderCopy(this->renderer, this->textures[t.texture_id], nullptr, &pos);
                 t.x -= this->game_speed;
             }
         }
+        this->bar.set_percentage(this->bar.get_percentage() + 0.001);
+        this->bar.render(this->renderer, 1);
         
         this->bat.add_force(0, -0.1);
         this->bat.move(this->window_width, this->window_height);
@@ -207,6 +214,11 @@ void game::load_textures() {
     this->textures.push_back(load_texture_from_file("textures/tilemap/wall_connect_right.png", this->renderer));
 
     this->textures.push_back(load_texture_from_file("textures/bat.png", this->renderer));
+
+    this->textures.push_back(load_texture_from_file("textures/background.png", this->renderer));
+
+    this->textures.push_back(load_texture_from_file("textures/blood_bar.png", this->renderer));
+    this->textures.push_back(load_texture_from_file("textures/blood_bar_fill.png", this->renderer));
 }
 
 bool game::is_occupied(int x, int y) {
