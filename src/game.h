@@ -8,6 +8,7 @@
 #include "utils.h"
 #include "player.h"
 #include "blood_bar.h"
+#include "snake.h"
 
 class game {
     private:
@@ -33,6 +34,7 @@ class game {
 
         player bat;
         blood_bar bar;
+        std::vector<snake> enemies;
 
         void handle_events(SDL_Event& event);
         void init_grid();

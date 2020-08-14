@@ -24,6 +24,8 @@ bool game::init() {
     this->bar = blood_bar{0, 0, this->textures[30], this->textures[31]};
     this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
 
+    this->enemies.push_back(snake{position{512, 256}, this->textures[32], this->textures[33], 256, 8});
+
     return true;
 }
 
@@ -32,6 +34,14 @@ void game::run() {
         SDL_RenderClear(this->renderer);
 
         SDL_RenderCopy(this->renderer, this->textures[29], nullptr, nullptr);
+
+        for(snake& s : this->enemies) {
+            s.add_force(position{0, -0.1});
+
+            if(s.can_see(this->bat.get_position())) {
+                s.on_player_spot(this->bat);
+            }
+        }
 
         for(int i = 0; i < this->map.size(); i++) {
             std::vector<tile>& row = this->map.at(i);
@@ -54,13 +64,28 @@ void game::run() {
                     reset = true;
                     break;
                 }
+                for(snake& s : this-> enemies) {
+                    if(s.does_collide(pos)) {
+                        s.on_tile_collision();
+                    }
+                }
                 if(reset) break;
 
                 SDL_RenderCopy(this->renderer, this->textures[t.texture_id], nullptr, &pos);
                 t.x -= this->game_speed;
             }
         }
-        this->bat.damage(0.5);
+        for(snake& s : this->enemies) {
+            s.update();
+
+            position snake_pos = s.get_position();
+            snake_pos.x -= 0.5;
+            s.set_position(snake_pos);
+
+            s.render(this->renderer, 2);
+        }
+
+       // this->bat.damage(0.5);
         this->bat.add_force(position{0, -0.1});
         this->bat.update();
         this->bat.render(this->renderer, 2);
@@ -228,6 +253,9 @@ void game::load_textures() {
 
     this->textures.push_back(load_texture_from_file("textures/blood_bar.png", this->renderer));
     this->textures.push_back(load_texture_from_file("textures/blood_bar_fill.png", this->renderer));
+
+    this->textures.push_back(load_texture_from_file("textures/snake_idle.png", this->renderer));
+    this->textures.push_back(load_texture_from_file("textures/snake_jumping.png", this->renderer));
 }
 
 bool game::is_occupied(int x, int y) {
