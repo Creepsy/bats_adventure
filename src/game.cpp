@@ -40,13 +40,18 @@ void game::run() {
                 this->generate_row();
                 continue;
             }
+            bool reset = false;
             for(tile& t : row) {
                 SDL_Rect pos = SDL_Rect{(int)(t.x * 32), (int)(this->window_height - t.y * 32 - 32), 33, 32};
                 if(this->bat.does_collide(pos, this->window_height) || this->bar.get_percentage() == 0) {
                     this->init_grid();
                     this->bat = player{128, 256, this->textures[28], 4};
                     this->bar.set_percentage(0.5);
+                    reset = true;
+                    break;
                 }
+                if(reset) break;
+                
                 SDL_RenderCopy(this->renderer, this->textures[t.texture_id], nullptr, &pos);
                 t.x -= this->game_speed;
             }
