@@ -2,7 +2,8 @@
 
 #include <iostream>
 
-game::game(const size_t width, const size_t height, const std::string& title) : window_width(width), window_height(height), title(title), running(false), game_speed(0.05) {
+game::game(const size_t width, const size_t height, const std::string& title) : 
+    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0} {
 }
 
 bool game::init() {
@@ -19,9 +20,9 @@ bool game::init() {
     this->load_textures();
     this->init_grid();
 
-    this->bat = player{128, 256, this->textures[28], 4};
+    this->bat = player{position{128, 256}, this->textures[28], 500, 4};
     this->bar = blood_bar{0, 0, this->textures[30], this->textures[31]};
-    this->bar.set_percentage(0.5);
+    this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
 
     return true;
 }
@@ -43,27 +44,30 @@ void game::run() {
             bool reset = false;
             for(tile& t : row) {
                 SDL_Rect pos = SDL_Rect{(int)(t.x * 32), (int)(this->window_height - t.y * 32 - 32), 33, 32};
-                if(this->bat.does_collide(pos, this->window_height) || this->bar.get_percentage() == 0) {
+                if(this->bat.does_collide(pos) || this->bar.get_percentage() == 0) {
+                    this->bat.on_tile_collision();
+                    SDL_Delay(1500);
+
                     this->init_grid();
-                    this->bat = player{128, 256, this->textures[28], 4};
-                    this->bar.set_percentage(0.5);
+                    this->bat = player{position{128, 256}, this->textures[28], 500, 4};
+                    this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
                     reset = true;
                     break;
                 }
                 if(reset) break;
-                
+
                 SDL_RenderCopy(this->renderer, this->textures[t.texture_id], nullptr, &pos);
                 t.x -= this->game_speed;
             }
         }
-        this->bar.set_percentage(this->bar.get_percentage() - 0.001);
-        this->bar.render(this->renderer, 1);
-        
-        this->bat.add_force(0, -0.1);
-        this->bat.move(this->window_width, this->window_height);
+        this->bat.damage(0.5);
+        this->bat.add_force(position{0, -0.1});
         this->bat.update();
-        this->bat.render(2, this->renderer, this->window_height);
+        this->bat.render(this->renderer, 2);
 
+        this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
+        this->bar.render(this->renderer, 1);
+    
         SDL_RenderPresent(renderer);
 
         SDL_Event event;
@@ -85,7 +89,7 @@ void game::handle_events(SDL_Event& event) {
     switch(event.type) {
         case SDL_KEYDOWN:
             if(event.key.keysym.sym == SDLK_ESCAPE) this->running = false;
-            if(event.key.keysym.sym == SDLK_SPACE) this->bat.add_force(0, 8);
+            if(event.key.keysym.sym == SDLK_SPACE) this->bat.add_force(position{0, 8});
             break;
         case SDL_QUIT:
             this->running = false;

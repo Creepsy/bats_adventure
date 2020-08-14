@@ -1,18 +1,24 @@
 #pragma once
 
 #include "animatable.h"
+#include "entity_types.h"
 
-class player : public animatable
+class player : public animatable, public entity
 {
 private:
-    float x, y;
-    float velocity_x, velocity_y;
+    double blood_level;
+    double max_blood;
 public:
-    player(float start_x, float start_y, SDL_Texture* texture_map, size_t timer = 0);
-    player();
-    void render(float scale, SDL_Renderer* renderer, const size_t screen_height);
-    void add_force(float fx, float fy);
-    void move(const size_t screen_width, const size_t screen_height);
-    bool does_collide(SDL_Rect tile, const size_t screen_height);
+    player(position start_position, SDL_Texture* texture_map, double max_blood, size_t timer = 0);
+    void render(SDL_Renderer* renderer, double scale) override;
+    void on_tile_collision() override;
+    void update() override;
+    bool does_collide(SDL_Rect collider) override;
+    void add_force(position velocity) override;
+    double get_blood();
+    double get_max_blood();
+    void damage(double amount);
+    void die();
+    bool is_dead();
     ~player();
 };
