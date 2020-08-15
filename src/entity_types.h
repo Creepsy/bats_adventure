@@ -20,7 +20,8 @@ class entity {
         virtual void render(SDL_Renderer* renderer, double scale) = 0;
         virtual void update();
         virtual void on_tile_collision() = 0;
-        virtual bool does_collide(SDL_Rect collider) = 0;
+        virtual bool does_collide(SDL_Rect collider, double scale);
+        virtual SDL_Rect get_collider(double scale) = 0;
         virtual ~entity();
 };
 

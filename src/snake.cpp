@@ -44,9 +44,12 @@ void snake::attack(position pos) {
     this->add_force(position{-direction.x * this->jump_force, -direction.y * this->jump_force * 2});
 }
 
-bool snake::does_collide(SDL_Rect collider) {
-    int real_y = 512 - this->pos.y; 
-    return this->pos.x + 64/ 4 < collider.x + collider.w && this->pos.x + 64 / 4 * 3 > collider.x && real_y + 64 / 4 < collider.y + collider.h && real_y + 64 / 4 * 3 > collider.y;
+SDL_Rect snake::get_collider(double scale) {
+    if(this->attacking) {
+        return SDL_Rect{(int)this->pos.x, (int)(512 - this->pos.y), (int)(51 * scale), (int)(8 * scale)};
+    } else {
+        return SDL_Rect{(int)(this->pos.x + 32 * scale / 4), (int)(512 - this->pos.y + 32 * scale / 2), (int)(32 * scale / 3 * 2), (int)(32 * scale / 2)};
+    }
 }
 
 snake::~snake() {

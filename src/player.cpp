@@ -16,14 +16,14 @@ void player::on_tile_collision() {
     this->die();
 }
 
-bool player::does_collide(SDL_Rect collider) {
-    int real_y = 512 - this->pos.y; 
-    return this->pos.x + this->width / 4 < collider.x + collider.w && this->pos.x + this->width / 4 * 3 > collider.x && real_y + this->height / 4 < collider.y + collider.h && real_y + this->height / 4 * 3 > collider.y;
-}
-
 void player::damage(double amount) {
     this->blood_level -= amount;
-    if(blood_level < 0) this->die();
+    if(this->blood_level < 0) this->die();
+}
+
+void player::heal(double amount) {
+    this->blood_level += amount;
+    if(this->blood_level > this->max_blood) this->blood_level = this->max_blood;
 }
 
 void player::die() {
@@ -62,6 +62,10 @@ double player::get_blood() {
 
 double player::get_max_blood() {
     return this->max_blood;
+}
+
+SDL_Rect player::get_collider(double scale) {
+    return SDL_Rect{(int)(this->pos.x - this->width * scale / 4), (int)(512 - this->pos.y - this->height * scale / 4), (int)(this->width * scale / 4 * 2), (int)(this->height * scale / 4 * 2)};
 }
 
 player::~player() {

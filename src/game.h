@@ -19,6 +19,8 @@ class game {
         int max_change_time = 3;
         int next_change = 0;
 
+        double spawn_entity = 0.5;
+
         float game_speed;
 
         const size_t window_width, window_height;

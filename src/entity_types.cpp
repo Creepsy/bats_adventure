@@ -22,6 +22,11 @@ void entity::update() {
     this->pos.y += this->velocity.y;
 }
 
+bool entity::does_collide(SDL_Rect collider, double scale) {
+    SDL_Rect col = this->get_collider(scale);
+    return col.x < collider.x + collider.w && col.x + col.w > collider.x && col.y < collider.y + collider.h && col.y + col.h  > collider.y;
+}
+
 entity::~entity() {
 }
 

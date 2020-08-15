@@ -13,12 +13,13 @@ public:
     void render(SDL_Renderer* renderer, double scale) override;
     void on_tile_collision() override;
     void update() override;
-    bool does_collide(SDL_Rect collider) override;
     void add_force(position velocity) override;
     double get_blood();
     double get_max_blood();
     void damage(double amount);
+    void heal(double amount);
     void die();
     bool is_dead();
+    SDL_Rect get_collider(double scale) override;
     ~player();
 };

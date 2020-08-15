@@ -41,6 +41,10 @@ void game::run() {
             if(s.can_see(this->bat.get_position())) {
                 s.on_player_spot(this->bat);
             }
+
+            if(s.does_collide(this->bat.get_collider(2), 2)) {
+                s.on_player_collision(this->bat);
+            }
         }
 
         for(int i = 0; i < this->map.size(); i++) {
@@ -54,7 +58,7 @@ void game::run() {
             bool reset = false;
             for(tile& t : row) {
                 SDL_Rect pos = SDL_Rect{(int)(t.x * 32), (int)(this->window_height - t.y * 32 - 32), 33, 32};
-                if(this->bat.does_collide(pos) || this->bar.get_percentage() == 0) {
+                if(this->bat.does_collide(pos, 2) || this->bar.get_percentage() == 0) {
                     this->bat.on_tile_collision();
                     SDL_Delay(1500);
 
@@ -65,7 +69,7 @@ void game::run() {
                     break;
                 }
                 for(snake& s : this-> enemies) {
-                    if(s.does_collide(pos)) {
+                    if(s.does_collide(pos, 2)) {
                         s.on_tile_collision();
                     }
                 }
@@ -74,13 +78,26 @@ void game::run() {
                 SDL_RenderCopy(this->renderer, this->textures[t.texture_id], nullptr, &pos);
                 t.x -= this->game_speed;
             }
+            if(reset) break;
         }
-        for(snake& s : this->enemies) {
+        for(int i = 0; i < this->enemies.size(); i++) {
+            snake& s = this->enemies.at(i);
+
+            if(s.get_position().x < -100 || s.get_position().y < -100) {
+                this->enemies.erase(this->enemies.begin() + i);
+                i--;
+                continue;
+            }
+
             s.update();
+            SDL_Rect col = s.get_collider(2);
+            SDL_RenderDrawRect(this->renderer, &col);
+
 
             position snake_pos = s.get_position();
-            snake_pos.x -= 0.5;
+            snake_pos.x -= this->game_speed * 32;
             s.set_position(snake_pos);
+
 
             s.render(this->renderer, 2);
         }
@@ -89,6 +106,9 @@ void game::run() {
         this->bat.add_force(position{0, -0.1});
         this->bat.update();
         this->bat.render(this->renderer, 2);
+
+        SDL_Rect col = bat.get_collider(2);
+        SDL_RenderDrawRect(this->renderer, &col);
 
         this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
         this->bar.render(this->renderer, 1);
@@ -130,7 +150,7 @@ void game::generate_row() {
 
         do {
             this->current_change = rand_int(-this->max_change, this->max_change);
-        } while(this->current_change == 0 || this->current_height + this->current_change < 0 || this->current_height + this->current_change > this->max_height);
+        } while(/*this->current_change == 0 ||*/ this->current_height + this->current_change < 0 || this->current_height + this->current_change > this->max_height);
     } else {
         this->next_change--;
         this->current_height += this->current_change;
@@ -150,6 +170,10 @@ void game::generate_row() {
         for(int y = 0; y < this->map.at(x).size(); y++) {
             this->map.at(x).at(y).texture_id = this->get_texture_id(x, y);
         }
+    }
+
+    if((double)rand() / RAND_MAX < this->spawn_entity && next_change == 0) {
+        this->enemies.push_back(snake{position{row.at(current_height).x * 32, row.at(current_height).y * 32 + 128}, this->textures[32], this->textures[33], (double)rand_int(256, 384), (double)rand_int(7, 9)});
     }
 }
 

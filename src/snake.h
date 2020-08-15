@@ -18,6 +18,6 @@ class snake : public enemy {
         void on_tile_collision() override;
         void on_player_collision(entity& p) override;
         void on_player_spot(entity& p) override;
-        bool does_collide(SDL_Rect collider) override;
+        SDL_Rect get_collider(double scale) override;
         ~snake();
 };
