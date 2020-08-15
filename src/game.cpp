@@ -3,7 +3,7 @@
 #include <iostream>
 
 game::game(const size_t width, const size_t height, const std::string& title) : 
-    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0} {
+    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0}, hop{position{-100, -100}, nullptr, 0} {
 }
 
 bool game::init() {
@@ -23,6 +23,8 @@ bool game::init() {
     this->bat = player{position{128, 256}, this->textures[28], 500, 4};
     this->bar = blood_bar{0, 0, this->textures[30], this->textures[31]};
     this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
+
+    this->hop = grass_hopper{position{600, 256}, this->textures[34], 4};
 
     this->enemies.push_back(snake{position{512, 256}, this->textures[32], this->textures[33], 256, 8});
 
@@ -46,6 +48,8 @@ void game::run() {
                 s.on_player_collision(this->bat);
             }
         }
+        if(this->hop.does_collide(this->bat.get_collider(2), 1)) this->hop.on_player_collision(this->bat);
+        this->hop.add_force(position{0, -0.1});
 
         for(int i = 0; i < this->map.size(); i++) {
             std::vector<tile>& row = this->map.at(i);
@@ -73,6 +77,9 @@ void game::run() {
                         s.on_tile_collision();
                     }
                 }
+                if(this->hop.does_collide(pos, 1)) {
+                    this->hop.on_tile_collision();
+                } 
                 if(reset) break;
 
                 SDL_RenderCopy(this->renderer, this->textures[t.texture_id], nullptr, &pos);
@@ -101,6 +108,15 @@ void game::run() {
 
             s.render(this->renderer, 2);
         }
+        this->hop.update();
+        position hop_pos = this->hop.get_position();
+        hop_pos.x -= this->game_speed * 32;
+        this->hop.set_position(hop_pos);
+
+        SDL_Rect hop_col = this->hop.get_collider(1);
+        SDL_RenderDrawRect(this->renderer, &hop_col);
+
+        this->hop.render(this->renderer, 1);
 
        // this->bat.damage(0.5);
         this->bat.add_force(position{0, -0.1});
@@ -280,6 +296,8 @@ void game::load_textures() {
 
     this->textures.push_back(load_texture_from_file("textures/snake_idle.png", this->renderer));
     this->textures.push_back(load_texture_from_file("textures/snake_jumping.png", this->renderer));
+
+    this->textures.push_back(load_texture_from_file("textures/grass_hopper.png", this->renderer));
 }
 
 bool game::is_occupied(int x, int y) {
