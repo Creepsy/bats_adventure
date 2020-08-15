@@ -20,7 +20,8 @@ class game {
         int max_change_time = 3;
         int next_change = 0;
 
-        double spawn_entity = 0.5;
+        double spawn_entity = 0.75;
+        double is_snake = 0.3;
 
         float game_speed;
 
@@ -37,8 +38,7 @@ class game {
 
         player bat;
         blood_bar bar;
-        std::vector<snake> enemies;
-        grass_hopper hop;
+        std::vector<enemy*> enemies;
 
         void handle_events(SDL_Event& event);
         void init_grid();

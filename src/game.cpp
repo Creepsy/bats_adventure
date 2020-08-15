@@ -3,7 +3,7 @@
 #include <iostream>
 
 game::game(const size_t width, const size_t height, const std::string& title) : 
-    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0}, hop{position{-100, -100}, nullptr, 0} {
+    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0} {
 }
 
 bool game::init() {
@@ -24,9 +24,9 @@ bool game::init() {
     this->bar = blood_bar{0, 0, this->textures[30], this->textures[31]};
     this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
 
-    this->hop = grass_hopper{position{600, 256}, this->textures[34], 4};
+  //  this->hop = grass_hopper{position{1000, 256}, this->textures[34], 2.25};
 
-    this->enemies.push_back(snake{position{512, 256}, this->textures[32], this->textures[33], 256, 8});
+ //   this->enemies.push_back(snake{position{512, 256}, this->textures[32], this->textures[33], 256, 8});
 
     return true;
 }
@@ -37,7 +37,23 @@ void game::run() {
 
         SDL_RenderCopy(this->renderer, this->textures[29], nullptr, nullptr);
 
-        for(snake& s : this->enemies) {
+        for(int i = 0; i < this->enemies.size(); i++) {
+            enemy* e = this->enemies.at(i);
+            e->add_force(position{0, -0.1});
+            if(dynamic_cast<snake*>(e)) {
+                if(e->can_see(this->bat.get_position())) e->on_player_spot(this->bat);
+                if(e->does_collide(this->bat.get_collider(2), 2)) e->on_player_collision(this->bat);
+            } else {
+                if(e->does_collide(this->bat.get_collider(2), 1)) {
+                    e->on_player_collision(this->bat);
+                    delete e;
+                    this->enemies.erase(this->enemies.begin() + i);
+                    i--;
+                }
+            }
+        }
+
+        /*for(snake& s : this->enemies) {
             s.add_force(position{0, -0.1});
 
             if(s.can_see(this->bat.get_position())) {
@@ -50,7 +66,7 @@ void game::run() {
         }
         if(this->hop.does_collide(this->bat.get_collider(2), 1)) this->hop.on_player_collision(this->bat);
         this->hop.add_force(position{0, -0.1});
-
+*/
         for(int i = 0; i < this->map.size(); i++) {
             std::vector<tile>& row = this->map.at(i);
             if(row.at(0).x < -1) {
@@ -72,14 +88,22 @@ void game::run() {
                     reset = true;
                     break;
                 }
-                for(snake& s : this-> enemies) {
+
+                for(enemy* e : this->enemies) {
+                    if(dynamic_cast<snake*>(e)) {
+                        if(e->does_collide(pos, 2)) e->on_tile_collision();
+                    } else {
+                        if(e->does_collide(pos, 1)) e->on_tile_collision();
+                    }
+                }
+               /* for(snake& s : this-> enemies) {
                     if(s.does_collide(pos, 2)) {
                         s.on_tile_collision();
                     }
                 }
                 if(this->hop.does_collide(pos, 1)) {
                     this->hop.on_tile_collision();
-                } 
+                } */
                 if(reset) break;
 
                 SDL_RenderCopy(this->renderer, this->textures[t.texture_id], nullptr, &pos);
@@ -87,7 +111,7 @@ void game::run() {
             }
             if(reset) break;
         }
-        for(int i = 0; i < this->enemies.size(); i++) {
+       /* for(int i = 0; i < this->enemies.size(); i++) {
             snake& s = this->enemies.at(i);
 
             if(s.get_position().x < -100 || s.get_position().y < -100) {
@@ -117,8 +141,31 @@ void game::run() {
         SDL_RenderDrawRect(this->renderer, &hop_col);
 
         this->hop.render(this->renderer, 1);
+*/
+        for(int i = 0; i < this->enemies.size(); i++) {
+            enemy* e = this->enemies.at(i);
+            if(e->get_position().x < -100 || e->get_position().y < -100) {
+                delete e;
+                this->enemies.erase(this->enemies.begin() + i);
+                i--;
+                continue;
+            }
 
-       // this->bat.damage(0.5);
+            e->update();
+
+            position pos = e->get_position();
+            pos.x -= this->game_speed * 32;
+            e->set_position(pos);
+
+
+            if(dynamic_cast<snake*>(e)) {
+                e->render(this->renderer, 2);
+            } else {
+                e->render(this->renderer, 1);
+            }
+
+        }
+        this->bat.damage(0.1);
         this->bat.add_force(position{0, -0.1});
         this->bat.update();
         this->bat.render(this->renderer, 2);
@@ -140,6 +187,7 @@ void game::run() {
 }
 
 game::~game() {
+    for(enemy* e : this->enemies) delete e;
     for(SDL_Texture* t : this->textures) SDL_DestroyTexture(t);
     SDL_DestroyRenderer(this->renderer);
     SDL_DestroyWindow(this->window);
@@ -189,11 +237,17 @@ void game::generate_row() {
     }
 
     if((double)rand() / RAND_MAX < this->spawn_entity && next_change == 0) {
-        this->enemies.push_back(snake{position{row.at(current_height).x * 32, row.at(current_height).y * 32 + 128}, this->textures[32], this->textures[33], (double)rand_int(256, 384), (double)rand_int(7, 9)});
+        if((double)rand() / RAND_MAX < this->is_snake) {
+            this->enemies.push_back(new snake{position{row.at(current_height).x * 32, row.at(current_height).y * 32 + 128}, this->textures[32], this->textures[33], (double)rand_int(256, 384), (double)rand_int(7, 9)});
+        } else {
+            this->enemies.push_back(new grass_hopper{position{row.at(current_height).x * 32, row.at(current_height).y * 32 + 128}, this->textures[34], (double)rand() / RAND_MAX * 2});
+        }
     }
 }
 
 void game::init_grid() {
+    for(enemy* e : this->enemies) delete e;
+    this->enemies.clear();
     this->map.clear();
     this->current_change = 0;
     this->current_height = 0;
