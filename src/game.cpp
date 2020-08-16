@@ -165,7 +165,7 @@ void game::run() {
             }
 
         }
-        this->bat.damage(0.1);
+       // this->bat.damage(0.25); <-- Dont fiorget to uncomment this!
         this->bat.add_force(position{0, -0.1});
         this->bat.update();
         this->bat.render(this->renderer, 2);
@@ -198,7 +198,17 @@ void game::handle_events(SDL_Event& event) {
     switch(event.type) {
         case SDL_KEYDOWN:
             if(event.key.keysym.sym == SDLK_ESCAPE) this->running = false;
-            if(event.key.keysym.sym == SDLK_SPACE) this->bat.add_force(position{0, 8});
+            if(event.key.keysym.sym == SDLK_SPACE) {
+                if(this->bat.get_blood() > this->bat.get_max_blood() * 0.6) {
+                    double excess = this->bat.get_blood() - this->bat.get_max_blood() * 0.6;
+                    double max_excess = this->bat.get_max_blood() * 0.4;
+                    double slow = (1 - excess / max_excess < 0.4) ? 0.4 : 1 - excess / max_excess;
+                    std::cout << slow << std::endl;
+                    this->bat.add_force(position{0, 8 * slow});
+                } else {
+                    this->bat.add_force(position{0, 8});
+                }
+            }
             break;
         case SDL_QUIT:
             this->running = false;
@@ -240,7 +250,7 @@ void game::generate_row() {
         if((double)rand() / RAND_MAX < this->is_snake) {
             this->enemies.push_back(new snake{position{row.at(current_height).x * 32, row.at(current_height).y * 32 + 128}, this->textures[32], this->textures[33], (double)rand_int(256, 384), (double)rand_int(7, 9)});
         } else {
-            this->enemies.push_back(new grass_hopper{position{row.at(current_height).x * 32, row.at(current_height).y * 32 + 128}, this->textures[34], (double)rand() / RAND_MAX * 2});
+            this->enemies.push_back(new grass_hopper{position{row.at(current_height).x * 32, row.at(current_height).y * 32 + 128}, this->textures[34], (double)rand_int(4, 7)});
         }
     }
 }

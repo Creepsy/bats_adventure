@@ -22,7 +22,8 @@ SDL_Rect grass_hopper::get_collider(double scale) {
 
 void grass_hopper::on_tile_collision() {
     this->velocity.x = -0.25;
-    this->add_force(position{-0.25, this->jump_force});
+    this->velocity.y = this->jump_force;
+  //  this->add_force(position{-0.25, this->jump_force});
 }
 
 grass_hopper::~grass_hopper ()
