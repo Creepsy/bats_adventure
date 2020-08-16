@@ -14,13 +14,17 @@ void button::render(SDL_Renderer* renderer, double scale) {
 
     int w, h;
     TTF_SizeText(this->font, title.c_str(), &w, &h);
-    SDL_Rect message_rect = SDL_Rect{this->hitbox.x + this-> hitbox.w / 4, this->hitbox.y + this->hitbox.h / 4, w, h};
+    SDL_Rect message_rect = SDL_Rect{this->hitbox.x + this-> hitbox.w / 2 - w / 2, this->hitbox.y + this->hitbox.h / 2 - h / 2, w, h};
 
 
     SDL_RenderCopy(renderer, texture_message, nullptr, &message_rect);
 
     SDL_FreeSurface(surface_message);
     SDL_DestroyTexture(texture_message);
+}
+
+void button::set_title(std::string title) {
+    this->title = title;
 }
 
 bool button::click(int x, int y) {

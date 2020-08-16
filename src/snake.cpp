@@ -33,34 +33,36 @@ bool snake::does_collide(SDL_Rect collider, double scale) {
     return entity::does_collide(collider, scale);
 }
 
-void snake::on_tile_collision() {
+void snake::on_tile_collision(double speed_multiplier) {
     if(!this->attacking) {
         this->velocity.x = 0;
         this->velocity.y = 0;
     }
 }
 
-void snake::on_player_collision(entity& p) {
+void snake::on_player_collision(entity& p, double speed_multiplier) {
     if(!this->damaged) {
         ((player&)p).damage(25);
         this->damaged = true;
     }
 }
 
-void snake::on_player_spot(entity& p) {
+void snake::on_player_spot(entity& p, double speed_multiplier) {
     if(!this->attacking) {
-        this->attack(p.get_position());
+        this->attack(p.get_position(), speed_multiplier);
     }
 }
 
-void snake::attack(position pos) {
-    this->attacking = true;
-    position direction{this->pos.x - pos.x, this->pos.y - pos.y};
-    double distance = sqrt(fabs(direction.x) * fabs(direction.x) + fabs(direction.y) * fabs(direction.y));
-    direction.x /= distance;
-    direction.y /= distance;
+void snake::attack(position pos, double speed_multiplier) {
+    if(pos.x < this->pos.x) {
+        this->attacking = true;
+        position direction{this->pos.x - pos.x, this->pos.y - pos.y};
+        double distance = sqrt(fabs(direction.x) * fabs(direction.x) + fabs(direction.y) * fabs(direction.y));
+        direction.x /= distance;
+        direction.y /= distance;
 
-    this->add_force(position{-direction.x * this->jump_force, -direction.y * this->jump_force * 2});
+        this->add_force(position{-direction.x * this->jump_force * (speed_multiplier / 0.05), -direction.y * this->jump_force * 2 * (speed_multiplier / 0.05)});
+    }
 }
 
 SDL_Rect snake::get_collider(double scale) {

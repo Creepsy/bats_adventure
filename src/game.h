@@ -15,7 +15,15 @@
 
 class game {
     private:
+        unsigned long long start;
+
+        double capacity;
+        double resistance;
+        double strength;
+
         long score;
+        long total_score;
+        long highscore;
 
         int current_height = 0;
         int current_change = 0;

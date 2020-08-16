@@ -3,7 +3,7 @@
 #include <iostream>
 
 game::game(const size_t width, const size_t height, const std::string& title) : 
-    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0}, score(0), playing(false) {
+    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0}, score(0), playing(false), highscore(0), total_score(1000000000000), capacity(0) {
 }
 
 bool game::init() {
@@ -29,7 +29,11 @@ bool game::init() {
     this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
     
     this->menu_buttons.clear();
-    this->menu_buttons.push_back(button{SDL_Rect{500, 300, 128, 64}, this->textures[36], " Play", this->font});
+    this->menu_buttons.push_back(button{SDL_Rect{448, 120, 128, 64}, this->textures[36], "Play", this->font});
+    this->menu_buttons.push_back(button{SDL_Rect{416, 204, 192, 96}, this->textures[36], "Capacity: 500", this->font});
+    this->menu_buttons.push_back(button{SDL_Rect{214, 204, 192, 96}, this->textures[36], "Strength: 500", this->font});
+    this->menu_buttons.push_back(button{SDL_Rect{618, 204, 192, 96}, this->textures[36], "Resistance: 500", this->font});
+    this->menu_buttons.push_back(button{SDL_Rect{448, 320, 128, 64}, this->textures[36], "Exit", this->font});
 
   //  this->hop = grass_hopper{position{1000, 256}, this->textures[34], 2.25};
 
@@ -39,17 +43,39 @@ bool game::init() {
 }
 
 void game::run_game() {
+    if(this->start == 0) this->start = time(nullptr);
+
+    unsigned long long time_elapsed = time(nullptr) - this->start;
+
+    if(time_elapsed > 320) {
+        this->is_snake = 0.65;
+    } else if(time_elapsed > 180) {
+        this->game_speed = 0.1;
+    } else if(time_elapsed > 120) {
+        this->is_snake = 0.55;
+    } else if(time_elapsed > 90) {
+        this->game_speed = 0.075;
+    } else if(time_elapsed > 70) {
+        this->is_snake = 0.5;
+        this->spawn_entity = 0.8;
+    } else if(time_elapsed > 60) {
+        this->game_speed = 0.06;
+    } else if(time_elapsed > 30) {
+        this->is_snake = 0.45;
+        this->spawn_entity = 0.77;
+    }
+
     SDL_RenderCopy(this->renderer, this->textures[29], nullptr, nullptr);
 
     for(int i = 0; i < this->enemies.size(); i++) {
         enemy* e = this->enemies.at(i);
-        e->add_force(position{0, -0.1});
+        e->add_force(position{0, -0.1 * (this->game_speed / 0.05)});
         if(dynamic_cast<snake*>(e)) {
-            if(e->can_see(this->bat.get_position())) e->on_player_spot(this->bat);
-            if(e->does_collide(this->bat.get_collider(2), 2)) e->on_player_collision(this->bat);
+            if(e->can_see(this->bat.get_position())) e->on_player_spot(this->bat, this->game_speed);
+            if(e->does_collide(this->bat.get_collider(2), 2)) e->on_player_collision(this->bat, this->game_speed);
         } else {
             if(e->does_collide(this->bat.get_collider(2), 1)) {
-                e->on_player_collision(this->bat);
+                e->on_player_collision(this->bat, this->game_speed);
                 delete e;
                 this->enemies.erase(this->enemies.begin() + i);
                 i--;
@@ -70,10 +96,16 @@ void game::run_game() {
         for(tile& t : row) {
             SDL_Rect pos = SDL_Rect{(int)(t.x * 32), (int)(this->window_height - t.y * 32 - 32), 33, 32};
             if(this->bat.does_collide(pos, 2) || this->bar.get_percentage() == 0) {
-                this->bat.on_tile_collision();
+                this->bat.on_tile_collision(this->game_speed);
                 SDL_Delay(1500);
 
+                this->game_speed = 0.05;
+                this->spawn_entity = 0.75;
+                this->is_snake = 0.4;
+                this->total_score += this->score;
+                if(score > this->highscore) this->highscore = score;
                 this->score = 0;
+                this->start = 0;
                 this->init_grid();
                 this->bat = player{position{128, 256}, this->textures[28], 500, 4};
                 this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
@@ -84,9 +116,9 @@ void game::run_game() {
 
             for(enemy* e : this->enemies) {
                 if(dynamic_cast<snake*>(e)) {
-                    if(e->does_collide(pos, 2)) e->on_tile_collision();
+                    if(e->does_collide(pos, 2)) e->on_tile_collision(this->game_speed);
                 } else {
-                    if(e->does_collide(pos, 1)) e->on_tile_collision();
+                    if(e->does_collide(pos, 1)) e->on_tile_collision(this->game_speed);
                 }
             }
             if(reset) break;
@@ -119,8 +151,8 @@ void game::run_game() {
         }
 
     }
-    this->bat.damage(0.25);
-    this->bat.add_force(position{0, -0.1});
+    this->bat.damage(0.25 * (1 - this->resistance / 2));
+    this->bat.add_force(position{0, -0.1 * (this->game_speed / 0.05)});
     this->bat.update();
     this->bat.render(this->renderer, 2);
 
@@ -156,6 +188,45 @@ void game::run_menu() {
     for(button& b : this->menu_buttons) {
         b.render(this->renderer, 1);
     }
+
+    SDL_Rect blood_icon = SDL_Rect{10, 10, 18, 27};
+
+    SDL_RenderCopy(this->renderer, this->textures[38], nullptr, &blood_icon);
+
+    SDL_Color black = SDL_Color{0, 0, 0};
+
+    std::string money = std::to_string(this->total_score);
+
+    SDL_Surface* surface_money = TTF_RenderText_Solid(this->font, money.c_str(), black);
+    SDL_Texture* texture_money = SDL_CreateTextureFromSurface(this->renderer, surface_money);
+
+    int w, h;
+    TTF_SizeText(this->font, money.c_str(), &w, &h);
+    SDL_Rect money_rect = SDL_Rect{40, 10, w, h};
+
+
+    SDL_RenderCopy(this->renderer, texture_money, nullptr, &money_rect);
+
+    SDL_FreeSurface(surface_money);
+    SDL_DestroyTexture(texture_money);
+
+
+    std::string highscore_txt = "Highscore: " + std::to_string(this->highscore);
+
+    SDL_Surface* surface_highscore = TTF_RenderText_Solid(this->font, highscore_txt.c_str(), black);
+    SDL_Texture* texture_highscore = SDL_CreateTextureFromSurface(this->renderer, surface_highscore);
+
+    TTF_SizeText(this->font, highscore_txt.c_str(), &w, &h);
+    SDL_Rect highscore_rect = SDL_Rect{10, 50, w, h};
+
+
+    SDL_RenderCopy(this->renderer, texture_highscore, nullptr, &highscore_rect);
+
+    SDL_FreeSurface(surface_highscore);
+    SDL_DestroyTexture(texture_highscore);
+
+
+    SDL_Delay(10);
 }
 
 void game::run() {
@@ -191,16 +262,18 @@ game::~game() {
 void game::handle_game_events(SDL_Event& event) {
     switch(event.type) {
         case SDL_KEYDOWN:
-            if(event.key.keysym.sym == SDLK_ESCAPE) this->running = false;
+            //if(event.key.keysym.sym == SDLK_ESCAPE) this->running = false;
             if(event.key.keysym.sym == SDLK_SPACE) {
                 if(this->bat.get_blood() > this->bat.get_max_blood() * 0.6) {
                     double excess = this->bat.get_blood() - this->bat.get_max_blood() * 0.6;
                     double max_excess = this->bat.get_max_blood() * 0.4;
                     double slow = (1 - excess / max_excess < 0.4) ? 0.4 : 1 - excess / max_excess;
+                    slow *= (1 + this->strength);
+                    if(slow > 1) slow = 1;
 
-                    this->bat.add_force(position{0, 8 * slow});
+                    this->bat.add_force(position{0, 8 * slow * (this->game_speed / 0.05)});
                 } else {
-                    this->bat.add_force(position{0, 8});
+                    this->bat.add_force(position{0, 8 * (this->game_speed / 0.05)});
                 }
             }
             break;
@@ -213,7 +286,7 @@ void game::handle_game_events(SDL_Event& event) {
 void game::handle_menu_events(SDL_Event& event) {
     switch(event.type) {
         case SDL_KEYDOWN:
-            if(event.key.keysym.sym == SDLK_ESCAPE) this->running = false;
+          //  if(event.key.keysym.sym == SDLK_ESCAPE) this->running = false;
             break;
         case SDL_QUIT:
             this->running = false;
@@ -223,7 +296,47 @@ void game::handle_menu_events(SDL_Event& event) {
             if(mouse_event.button == SDL_BUTTON_LEFT) {
                 for(button& b : this->menu_buttons) {
                     if(b.click(mouse_event.x, mouse_event.y)) {
-                        this->playing = true; //placeholder
+                        if(b.get_title() == "Play") {
+                            this->bat.set_max_blood(500 * (1 + this->capacity));
+                            this->bat.set_blood_level(500 * (1 + this->capacity) / 2);
+                            this->bar.set_percentage(this->bat.get_max_blood() / this->bat.get_blood());
+                            this->playing = true;
+                        } else if(b.get_title() == "Exit") {
+                            this->running = false;
+                        } else if(b.get_title().substr(0, 9) == "Capacity:") {
+                            int price = std::stoi(b.get_title().substr(10));
+                            if(this->total_score >= price && this->capacity < 1) {
+                                this->total_score -= price;
+                                this->capacity += 0.2;
+                                int updated_price = price * 2.25;
+                                b.set_title("Capacity: " + std::to_string(updated_price));
+                            }
+                            if(this->capacity >= 1) {
+                                b.set_title("Sold out!");
+                            }
+                        } else if(b.get_title().substr(0, 11) == "Resistance:") {
+                            int price = std::stoi(b.get_title().substr(12));
+                            if(this->total_score >= price && this->resistance < 1) {
+                                this->total_score -= price;
+                                this->resistance += 0.2;
+                                int updated_price = price * 2.25;
+                                b.set_title("Resistance: " + std::to_string(updated_price));
+                            }
+                            if(this->resistance >= 1) {
+                                b.set_title("Sold out!");
+                            }
+                        } else if(b.get_title().substr(0, 9) == "Strength:") {
+                            int price = std::stoi(b.get_title().substr(10));
+                            if(this->total_score >= price && this->strength < 1) {
+                                this->total_score -= price;
+                                this->strength += 0.2;
+                                int updated_price = price * 2.25;
+                                b.set_title("Strength: " + std::to_string(updated_price));
+                            }
+                            if(this->strength >= 1) {
+                                b.set_title("Sold out!");
+                            }
+                        }
                     }
                 }
             }
@@ -379,6 +492,8 @@ void game::load_textures() {
     this->textures.push_back(load_texture_from_file("textures/grass_hopper.png", this->renderer));
     this->textures.push_back(load_texture_from_file("textures/menu.png", this->renderer));
     this->textures.push_back(load_texture_from_file("textures/empty_button.png", this->renderer));
+    this->textures.push_back(load_texture_from_file("textures/shop_item.png", this->renderer));
+    this->textures.push_back(load_texture_from_file("textures/blood_icon.png", this->renderer));
 }
 
 bool game::is_occupied(int x, int y) {

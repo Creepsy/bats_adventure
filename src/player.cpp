@@ -12,13 +12,17 @@ void player::render(SDL_Renderer* renderer, double scale) {
     this->animatable::render(screen_pos, renderer, -this->velocity.y * 10);
 }
 
-void player::on_tile_collision() {
+void player::on_tile_collision(double speed_multiplier) {
     this->die();
 }
 
 void player::damage(double amount) {
     this->blood_level -= amount;
     if(this->blood_level < 0) this->die();
+}
+
+void player::set_blood_level(double amount) {
+    this->blood_level = amount;
 }
 
 void player::heal(double amount) {
@@ -62,6 +66,10 @@ double player::get_blood() {
 
 double player::get_max_blood() {
     return this->max_blood;
+}
+
+void player::set_max_blood(double amount) {
+    this->max_blood = amount;
 }
 
 SDL_Rect player::get_collider(double scale) {
