@@ -1,7 +1,7 @@
 #include "player.h"
 
 player::player(position start_position, SDL_Texture* texture_map, double max_blood, size_t timer) : 
-    entity{start_position}, animatable{texture_map, 8, 32, 32, 32, timer}, max_blood(max_blood), blood_level(max_blood / 2) {
+    entity{start_position}, animatable{texture_map, 8, 32, 32, 32, timer}, max_blood(max_blood), blood_level(max_blood / 3 * 2) {
 }
 
 void player::render(SDL_Renderer* renderer, double scale) {
