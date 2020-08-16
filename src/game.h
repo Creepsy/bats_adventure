@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <string>
 #include <vector>
 
@@ -13,6 +14,8 @@
 
 class game {
     private:
+        long score;
+
         int current_height = 0;
         int current_change = 0;
         int max_height = 7;
@@ -21,7 +24,7 @@ class game {
         int next_change = 0;
 
         double spawn_entity = 0.75;
-        double is_snake = 0.3;
+        double is_snake = 0.4;
 
         float game_speed;
 
@@ -33,6 +36,7 @@ class game {
         bool running;
 
         std::vector<SDL_Texture*> textures;
+        TTF_Font* font;
 
         std::vector<std::vector<tile>> map;
 

@@ -1,17 +1,36 @@
 #include "snake.h"
 
+#include "math.h"
+
 snake::snake(position pos, SDL_Texture* idle, SDL_Texture* jump, double view_range, double jump_force) :
     enemy{pos, view_range}, idle(idle), jump(jump), attacking(false), jump_force(jump_force), damaged(false) {
 }
 
 void snake::render(SDL_Renderer* renderer, double scale) {
     if(this->attacking) {
+        double rotation = atan(this->velocity.y / this->velocity.x) * (double)180 / M_PI;
         SDL_Rect target_pos = SDL_Rect{(int)this->pos.x, (int)(512 - this->pos.y), (int)(51 * scale), (int)(8 * scale)};
-        SDL_RenderCopyEx(renderer, this->jump, nullptr, &target_pos, this->velocity.y * 10, nullptr, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, this->jump, nullptr, &target_pos, -rotation, nullptr, SDL_FLIP_NONE);
     } else {
         SDL_Rect target_pos = SDL_Rect{(int)this->pos.x, (int)(512 - this->pos.y), (int)(32 * scale), (int)(32 * scale)};
         SDL_RenderCopy(renderer, this->idle, nullptr, &target_pos);
     }
+}
+
+bool snake::does_collide(SDL_Rect collider, double scale) {
+    if(this->attacking) {
+        position center = position{this->pos.x + 51 * scale / 2, 512 - this->pos.y + 8 * scale / 2};
+        double dist = sqrt(this->velocity.x * this->velocity.x + this->velocity.y * this->velocity.y);
+        double n_x = this->velocity.x / dist, n_y = this->velocity.y / dist;
+
+        for(int i = -3; i <= 3; i++) {
+            SDL_Rect col = SDL_Rect{(int)(center.x + -n_x * i * 10 - 8), (int)(center.y + n_y * i * 10 - 8), 16, 16};
+            if(col.x < collider.x + collider.w && col.x + col.w > collider.x && col.y < collider.y + collider.h && col.y + col.h  > collider.y) return true;
+        }
+        return false;
+    }
+
+    return entity::does_collide(collider, scale);
 }
 
 void snake::on_tile_collision() {

@@ -2,7 +2,7 @@ sDir = src/
 bDir = build/
 
 all: $(sDir)run.cpp $(sDir)game.h game $(sDir)utils.h utils animatable $(sDir)animatable.h player $(sDir)player.h blood_bar $(sDir)blood_bar.h entity_types $(sDir)entity_types.h snake $(sDir)snake.h grass_hopper $(sDir)grass_hopper.h
-	g++ $(sDir)run.cpp -o bats_adventure -lSDL2 -lSDL2_image $(bDir)game.o $(bDir)utils.o $(bDir)animatable.o $(bDir)player.o $(bDir)blood_bar.o $(bDir)entity_types.o $(bDir)snake.o $(bDir)grass_hopper.o
+	g++ $(sDir)run.cpp -o bats_adventure -lSDL2 -lSDL2_image -lSDL2_ttf $(bDir)game.o $(bDir)utils.o $(bDir)animatable.o $(bDir)player.o $(bDir)blood_bar.o $(bDir)entity_types.o $(bDir)snake.o $(bDir)grass_hopper.o
 
 game: $(sDir)game.cpp
 	g++ -c $(sDir)game.cpp -o $(bDir)game.o

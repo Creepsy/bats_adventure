@@ -3,10 +3,12 @@
 #include <iostream>
 
 game::game(const size_t width, const size_t height, const std::string& title) : 
-    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0} {
+    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0}, score(0) {
 }
 
 bool game::init() {
+    if(TTF_Init() < 0) return false;
+
     if(SDL_Init(SDL_INIT_VIDEO) < 0) return false;
     this->window = SDL_CreateWindow(this->title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, this->window_width, this->window_height, SDL_WINDOW_SHOWN);
 
@@ -16,6 +18,8 @@ bool game::init() {
     if(!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) return false;
 
     this->running = true;
+
+    this->font = TTF_OpenFont("fonts/VT323-Regular.ttf", 24);
 
     this->load_textures();
     this->init_grid();
@@ -49,6 +53,7 @@ void game::run() {
                     delete e;
                     this->enemies.erase(this->enemies.begin() + i);
                     i--;
+                    this->score += 50;
                 }
             }
         }
@@ -82,6 +87,7 @@ void game::run() {
                     this->bat.on_tile_collision();
                     SDL_Delay(1500);
 
+                    this->score = 0;
                     this->init_grid();
                     this->bat = player{position{128, 256}, this->textures[28], 500, 4};
                     this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
@@ -165,7 +171,7 @@ void game::run() {
             }
 
         }
-       // this->bat.damage(0.25); <-- Dont fiorget to uncomment this!
+        this->bat.damage(0.25);
         this->bat.add_force(position{0, -0.1});
         this->bat.update();
         this->bat.render(this->renderer, 2);
@@ -175,7 +181,24 @@ void game::run() {
 
         this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
         this->bar.render(this->renderer, 1);
-    
+
+        SDL_Color black = SDL_Color{0, 0, 0};
+
+        std::string message = "Blood collected: " + std::to_string(this->score);
+
+        SDL_Surface* surface_message = TTF_RenderText_Solid(this->font, message.c_str(), black);
+        SDL_Texture* texture_message = SDL_CreateTextureFromSurface(this->renderer, surface_message);
+
+        int w, h;
+        TTF_SizeText(this->font, message.c_str(), &w, &h);
+        SDL_Rect message_rect = SDL_Rect{128, 0, w, h};
+
+
+        SDL_RenderCopy(this->renderer, texture_message, nullptr, &message_rect);
+
+        SDL_FreeSurface(surface_message);
+        SDL_DestroyTexture(texture_message);
+
         SDL_RenderPresent(renderer);
 
         SDL_Event event;
@@ -191,6 +214,7 @@ game::~game() {
     for(SDL_Texture* t : this->textures) SDL_DestroyTexture(t);
     SDL_DestroyRenderer(this->renderer);
     SDL_DestroyWindow(this->window);
+    TTF_CloseFont(this->font);
     SDL_Quit();
 }
 
@@ -203,7 +227,7 @@ void game::handle_events(SDL_Event& event) {
                     double excess = this->bat.get_blood() - this->bat.get_max_blood() * 0.6;
                     double max_excess = this->bat.get_max_blood() * 0.4;
                     double slow = (1 - excess / max_excess < 0.4) ? 0.4 : 1 - excess / max_excess;
-                    std::cout << slow << std::endl;
+
                     this->bat.add_force(position{0, 8 * slow});
                 } else {
                     this->bat.add_force(position{0, 8});
