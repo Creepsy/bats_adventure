@@ -11,6 +11,7 @@
 #include "blood_bar.h"
 #include "snake.h"
 #include "grass_hopper.h"
+#include "button.h"
 
 class game {
     private:
@@ -34,6 +35,8 @@ class game {
         SDL_Window* window = nullptr;
         SDL_Renderer* renderer = nullptr;
         bool running;
+        bool playing;
+        std::vector<button> menu_buttons;
 
         std::vector<SDL_Texture*> textures;
         TTF_Font* font;
@@ -44,12 +47,15 @@ class game {
         blood_bar bar;
         std::vector<enemy*> enemies;
 
-        void handle_events(SDL_Event& event);
+        void handle_game_events(SDL_Event& event);
+        void handle_menu_events(SDL_Event& event);
         void init_grid();
         void generate_row();
         int get_texture_id(int x, int y);
         void load_textures();
         bool is_occupied(int x, int y);
+        void run_game();
+        void run_menu();
     public:
         game(const size_t width, const size_t height, const std::string& title);
         bool init();

@@ -3,7 +3,7 @@
 #include <iostream>
 
 game::game(const size_t width, const size_t height, const std::string& title) : 
-    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0}, score(0) {
+    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0}, score(0), playing(false) {
 }
 
 bool game::init() {
@@ -27,6 +27,9 @@ bool game::init() {
     this->bat = player{position{128, 256}, this->textures[28], 500, 4};
     this->bar = blood_bar{0, 0, this->textures[30], this->textures[31]};
     this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
+    
+    this->menu_buttons.clear();
+    this->menu_buttons.push_back(button{SDL_Rect{500, 300, 128, 64}, this->textures[36], " Play", this->font});
 
   //  this->hop = grass_hopper{position{1000, 256}, this->textures[34], 2.25};
 
@@ -35,178 +38,145 @@ bool game::init() {
     return true;
 }
 
-void game::run() {
-    while(this->running) {
-        SDL_RenderClear(this->renderer);
+void game::run_game() {
+    SDL_RenderCopy(this->renderer, this->textures[29], nullptr, nullptr);
 
-        SDL_RenderCopy(this->renderer, this->textures[29], nullptr, nullptr);
-
-        for(int i = 0; i < this->enemies.size(); i++) {
-            enemy* e = this->enemies.at(i);
-            e->add_force(position{0, -0.1});
-            if(dynamic_cast<snake*>(e)) {
-                if(e->can_see(this->bat.get_position())) e->on_player_spot(this->bat);
-                if(e->does_collide(this->bat.get_collider(2), 2)) e->on_player_collision(this->bat);
-            } else {
-                if(e->does_collide(this->bat.get_collider(2), 1)) {
-                    e->on_player_collision(this->bat);
-                    delete e;
-                    this->enemies.erase(this->enemies.begin() + i);
-                    i--;
-                    this->score += 50;
-                }
-            }
-        }
-
-        /*for(snake& s : this->enemies) {
-            s.add_force(position{0, -0.1});
-
-            if(s.can_see(this->bat.get_position())) {
-                s.on_player_spot(this->bat);
-            }
-
-            if(s.does_collide(this->bat.get_collider(2), 2)) {
-                s.on_player_collision(this->bat);
-            }
-        }
-        if(this->hop.does_collide(this->bat.get_collider(2), 1)) this->hop.on_player_collision(this->bat);
-        this->hop.add_force(position{0, -0.1});
-*/
-        for(int i = 0; i < this->map.size(); i++) {
-            std::vector<tile>& row = this->map.at(i);
-            if(row.at(0).x < -1) {
-                this->map.erase(this->map.begin());
-                i--;
-                this->generate_row();
-                continue;
-            }
-            bool reset = false;
-            for(tile& t : row) {
-                SDL_Rect pos = SDL_Rect{(int)(t.x * 32), (int)(this->window_height - t.y * 32 - 32), 33, 32};
-                if(this->bat.does_collide(pos, 2) || this->bar.get_percentage() == 0) {
-                    this->bat.on_tile_collision();
-                    SDL_Delay(1500);
-
-                    this->score = 0;
-                    this->init_grid();
-                    this->bat = player{position{128, 256}, this->textures[28], 500, 4};
-                    this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
-                    reset = true;
-                    break;
-                }
-
-                for(enemy* e : this->enemies) {
-                    if(dynamic_cast<snake*>(e)) {
-                        if(e->does_collide(pos, 2)) e->on_tile_collision();
-                    } else {
-                        if(e->does_collide(pos, 1)) e->on_tile_collision();
-                    }
-                }
-               /* for(snake& s : this-> enemies) {
-                    if(s.does_collide(pos, 2)) {
-                        s.on_tile_collision();
-                    }
-                }
-                if(this->hop.does_collide(pos, 1)) {
-                    this->hop.on_tile_collision();
-                } */
-                if(reset) break;
-
-                SDL_RenderCopy(this->renderer, this->textures[t.texture_id], nullptr, &pos);
-                t.x -= this->game_speed;
-            }
-            if(reset) break;
-        }
-       /* for(int i = 0; i < this->enemies.size(); i++) {
-            snake& s = this->enemies.at(i);
-
-            if(s.get_position().x < -100 || s.get_position().y < -100) {
-                this->enemies.erase(this->enemies.begin() + i);
-                i--;
-                continue;
-            }
-
-            s.update();
-            SDL_Rect col = s.get_collider(2);
-            SDL_RenderDrawRect(this->renderer, &col);
-
-
-            position snake_pos = s.get_position();
-            snake_pos.x -= this->game_speed * 32;
-            s.set_position(snake_pos);
-
-
-            s.render(this->renderer, 2);
-        }
-        this->hop.update();
-        position hop_pos = this->hop.get_position();
-        hop_pos.x -= this->game_speed * 32;
-        this->hop.set_position(hop_pos);
-
-        SDL_Rect hop_col = this->hop.get_collider(1);
-        SDL_RenderDrawRect(this->renderer, &hop_col);
-
-        this->hop.render(this->renderer, 1);
-*/
-        for(int i = 0; i < this->enemies.size(); i++) {
-            enemy* e = this->enemies.at(i);
-            if(e->get_position().x < -100 || e->get_position().y < -100) {
+    for(int i = 0; i < this->enemies.size(); i++) {
+        enemy* e = this->enemies.at(i);
+        e->add_force(position{0, -0.1});
+        if(dynamic_cast<snake*>(e)) {
+            if(e->can_see(this->bat.get_position())) e->on_player_spot(this->bat);
+            if(e->does_collide(this->bat.get_collider(2), 2)) e->on_player_collision(this->bat);
+        } else {
+            if(e->does_collide(this->bat.get_collider(2), 1)) {
+                e->on_player_collision(this->bat);
                 delete e;
                 this->enemies.erase(this->enemies.begin() + i);
                 i--;
-                continue;
+                this->score += 50;
             }
-
-            e->update();
-
-            position pos = e->get_position();
-            pos.x -= this->game_speed * 32;
-            e->set_position(pos);
-
-
-            if(dynamic_cast<snake*>(e)) {
-                e->render(this->renderer, 2);
-            } else {
-                e->render(this->renderer, 1);
-            }
-
         }
-        this->bat.damage(0.25);
-        this->bat.add_force(position{0, -0.1});
-        this->bat.update();
-        this->bat.render(this->renderer, 2);
-
-        SDL_Rect col = bat.get_collider(2);
-        SDL_RenderDrawRect(this->renderer, &col);
-
-        this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
-        this->bar.render(this->renderer, 1);
-
-        SDL_Color black = SDL_Color{0, 0, 0};
-
-        std::string message = "Blood collected: " + std::to_string(this->score);
-
-        SDL_Surface* surface_message = TTF_RenderText_Solid(this->font, message.c_str(), black);
-        SDL_Texture* texture_message = SDL_CreateTextureFromSurface(this->renderer, surface_message);
-
-        int w, h;
-        TTF_SizeText(this->font, message.c_str(), &w, &h);
-        SDL_Rect message_rect = SDL_Rect{128, 0, w, h};
-
-
-        SDL_RenderCopy(this->renderer, texture_message, nullptr, &message_rect);
-
-        SDL_FreeSurface(surface_message);
-        SDL_DestroyTexture(texture_message);
-
-        SDL_RenderPresent(renderer);
-
-        SDL_Event event;
-        while(SDL_PollEvent(&event)) {
-            this->handle_events(event);
-        }
-        SDL_Delay(10);
     }
+
+    for(int i = 0; i < this->map.size(); i++) {
+        std::vector<tile>& row = this->map.at(i);
+        if(row.at(0).x < -1) {
+            this->map.erase(this->map.begin());
+            i--;
+            this->generate_row();
+            continue;
+        }
+        bool reset = false;
+        for(tile& t : row) {
+            SDL_Rect pos = SDL_Rect{(int)(t.x * 32), (int)(this->window_height - t.y * 32 - 32), 33, 32};
+            if(this->bat.does_collide(pos, 2) || this->bar.get_percentage() == 0) {
+                this->bat.on_tile_collision();
+                SDL_Delay(1500);
+
+                this->score = 0;
+                this->init_grid();
+                this->bat = player{position{128, 256}, this->textures[28], 500, 4};
+                this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
+                this->playing = false;
+                reset = true;
+                break;
+            }
+
+            for(enemy* e : this->enemies) {
+                if(dynamic_cast<snake*>(e)) {
+                    if(e->does_collide(pos, 2)) e->on_tile_collision();
+                } else {
+                    if(e->does_collide(pos, 1)) e->on_tile_collision();
+                }
+            }
+            if(reset) break;
+
+            SDL_RenderCopy(this->renderer, this->textures[t.texture_id], nullptr, &pos);
+            t.x -= this->game_speed;
+        }
+        if(reset) break;
+    }
+    for(int i = 0; i < this->enemies.size(); i++) {
+        enemy* e = this->enemies.at(i);
+        if(e->get_position().x < -100 || e->get_position().y < -100) {
+            delete e;
+            this->enemies.erase(this->enemies.begin() + i);
+            i--;
+            continue;
+        }
+
+        e->update();
+
+        position pos = e->get_position();
+        pos.x -= this->game_speed * 32;
+        e->set_position(pos);
+
+
+        if(dynamic_cast<snake*>(e)) {
+            e->render(this->renderer, 2);
+        } else {
+            e->render(this->renderer, 1);
+        }
+
+    }
+    this->bat.damage(0.25);
+    this->bat.add_force(position{0, -0.1});
+    this->bat.update();
+    this->bat.render(this->renderer, 2);
+
+    SDL_Rect col = bat.get_collider(2);
+    SDL_RenderDrawRect(this->renderer, &col);
+
+    this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
+    this->bar.render(this->renderer, 1);
+
+    SDL_Color black = SDL_Color{0, 0, 0};
+
+    std::string message = "Blood collected: " + std::to_string(this->score);
+
+    SDL_Surface* surface_message = TTF_RenderText_Solid(this->font, message.c_str(), black);
+    SDL_Texture* texture_message = SDL_CreateTextureFromSurface(this->renderer, surface_message);
+
+    int w, h;
+    TTF_SizeText(this->font, message.c_str(), &w, &h);
+    SDL_Rect message_rect = SDL_Rect{128, 0, w, h};
+
+
+    SDL_RenderCopy(this->renderer, texture_message, nullptr, &message_rect);
+
+    SDL_FreeSurface(surface_message);
+    SDL_DestroyTexture(texture_message);
+
+    SDL_Delay(10);
+}
+
+void game::run_menu() {
+    SDL_RenderCopy(this->renderer, this->textures[35], nullptr, nullptr);
+
+    for(button& b : this->menu_buttons) {
+        b.render(this->renderer, 1);
+    }
+}
+
+void game::run() {
+    while(this->running) {
+        SDL_RenderClear(this->renderer);
+        if(this->playing) {
+            this->run_game();
+
+            SDL_Event event;
+            while(SDL_PollEvent(&event)) {
+                this->handle_game_events(event);
+            }
+        } else {
+            this->run_menu();
+            SDL_Event event;
+            while(SDL_PollEvent(&event)) {
+                this->handle_menu_events(event);
+            }
+        }
+        SDL_RenderPresent(renderer);
+    }   
 }
 
 game::~game() {
@@ -218,7 +188,7 @@ game::~game() {
     SDL_Quit();
 }
 
-void game::handle_events(SDL_Event& event) {
+void game::handle_game_events(SDL_Event& event) {
     switch(event.type) {
         case SDL_KEYDOWN:
             if(event.key.keysym.sym == SDLK_ESCAPE) this->running = false;
@@ -236,6 +206,27 @@ void game::handle_events(SDL_Event& event) {
             break;
         case SDL_QUIT:
             this->running = false;
+            break;
+    }
+}
+
+void game::handle_menu_events(SDL_Event& event) {
+    switch(event.type) {
+        case SDL_KEYDOWN:
+            if(event.key.keysym.sym == SDLK_ESCAPE) this->running = false;
+            break;
+        case SDL_QUIT:
+            this->running = false;
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            SDL_MouseButtonEvent& mouse_event = (SDL_MouseButtonEvent&)event;
+            if(mouse_event.button == SDL_BUTTON_LEFT) {
+                for(button& b : this->menu_buttons) {
+                    if(b.click(mouse_event.x, mouse_event.y)) {
+                        this->playing = true; //placeholder
+                    }
+                }
+            }
             break;
     }
 }
@@ -386,6 +377,8 @@ void game::load_textures() {
     this->textures.push_back(load_texture_from_file("textures/snake_jumping.png", this->renderer));
 
     this->textures.push_back(load_texture_from_file("textures/grass_hopper.png", this->renderer));
+    this->textures.push_back(load_texture_from_file("textures/menu.png", this->renderer));
+    this->textures.push_back(load_texture_from_file("textures/empty_button.png", this->renderer));
 }
 
 bool game::is_occupied(int x, int y) {
