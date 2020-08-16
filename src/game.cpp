@@ -3,7 +3,7 @@
 #include <iostream>
 
 game::game(const size_t width, const size_t height, const std::string& title) : 
-    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0}, score(0), playing(false), highscore(0), total_score(1000000000000), capacity(0) {
+    window_width(width), window_height(height), title(title), running(false), game_speed(0.05), bat{position{-100, -100}, nullptr, 0, 0}, score(0), playing(false), highscore(0), total_score(0), capacity(0) {
 }
 
 bool game::init() {
@@ -24,7 +24,7 @@ bool game::init() {
     this->load_textures();
     this->init_grid();
 
-    this->bat = player{position{128, 256}, this->textures[28], 500, 4};
+    this->bat = player{position{128, 256}, this->textures[28], 500 * (1 + this->capacity) / 3 * 2, 4};
     this->bar = blood_bar{0, 0, this->textures[30], this->textures[31]};
     this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
     
@@ -97,7 +97,7 @@ void game::run_game() {
             SDL_Rect pos = SDL_Rect{(int)(t.x * 32), (int)(this->window_height - t.y * 32 - 32), 33, 32};
             if(this->bat.does_collide(pos, 2) || this->bar.get_percentage() == 0) {
                 this->bat.on_tile_collision(this->game_speed);
-                SDL_Delay(1500);
+                SDL_Delay(1000);
 
                 this->game_speed = 0.05;
                 this->spawn_entity = 0.75;
@@ -107,7 +107,7 @@ void game::run_game() {
                 this->score = 0;
                 this->start = 0;
                 this->init_grid();
-                this->bat = player{position{128, 256}, this->textures[28], 500, 4};
+                this->bat = player{position{128, 256}, this->textures[28], 500 * (1 + this->capacity) / 3 * 2, 4};
                 this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
                 this->playing = false;
                 reset = true;
@@ -298,7 +298,7 @@ void game::handle_menu_events(SDL_Event& event) {
                     if(b.click(mouse_event.x, mouse_event.y)) {
                         if(b.get_title() == "Play") {
                             this->bat.set_max_blood(500 * (1 + this->capacity));
-                            this->bat.set_blood_level(500 * (1 + this->capacity) / 2);
+                            this->bat.set_blood_level(500 * (1 + this->capacity) / 3 * 2);
                             this->bar.set_percentage(this->bat.get_max_blood() / this->bat.get_blood());
                             this->playing = true;
                         } else if(b.get_title() == "Exit") {
