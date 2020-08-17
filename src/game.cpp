@@ -156,9 +156,6 @@ void game::run_game() {
     this->bat.update();
     this->bat.render(this->renderer, 2);
 
-    SDL_Rect col = bat.get_collider(2);
-    SDL_RenderDrawRect(this->renderer, &col);
-
     this->bar.set_percentage(this->bat.get_blood() / this->bat.get_max_blood());
     this->bar.render(this->renderer, 1);
 
